@@ -95,7 +95,7 @@ tr:hover td{background:var(--ice)}
 <span class="bx r" id="acBadge">⚡ 0 รายการ</span>
 <button class="bp" onclick="refreshData()">🔄 รีเฟรช</button>
 <button class="bp" onclick="window.print()">🖨 พิมพ์</button>
-<button class="bp" onclick="window.open('https://script.google.com/macros/s/AKfycbyR7Ucrfs-QOGbLF9EpbiHt9LoGUGd_zZ2O9HfMjSocMvO5qLRs_TbvZiBGpY9dWemo/exec?page=chart','_blank')" style="background:#1B5E20;color:#fff;border-color:#1B5E20">📊 กราฟสถิติ สชป.11</button>
+<button class="bp" onclick="window.open(CHART_URL,'_blank')" style="background:#1B5E20;color:#fff;border-color:#1B5E20">📊 กราฟสถิติ สชป.11</button>
 </div>
 </div>
 <div class="fbar">
@@ -181,9 +181,11 @@ tr:hover td{background:var(--ice)}
 </div>
 <script>
 // ============================================================
-// 🔧 ใส่ URL ของ Google Apps Script v3 ที่นี่
+// 🔧 ใส่ URL ของ Google Apps Script ที่นี่ (รวมศูนย์จุดเดียว)
 // ============================================================
-const API_URL = 'https://script.google.com/macros/s/AKfycbxIkBB5T0vL7MES76pqcB_a2bgqT-TVDFIRMDgCnHKRHuZBytPuXPbfVogzP2qgF1Vf/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbyMaCtK01tGDYP-jrq9cgUU8x071ye09-NN2YqwmQrAKIl2H_5JaoOZ1zI3s-yuo6vK/exec';
+const CHART_URL = API_URL + '?page=chart';
+// (URL เดิม: https://script.google.com/macros/s/AKfycbxIkBB5T0vL7MES76pqcB_a2bgqT-TVDFIRMDgCnHKRHuZBytPuXPbfVogzP2qgF1Vf/exec)
 // ============================================================
 
 // ============================================================
@@ -329,7 +331,7 @@ async function fetchData() {
     SD=data.SD||[]; AD=data.AD||[]; ACTS=data.ACTS||[]; ALL=data.ALL||[];
     const updated = data.updated || 'ไม่ทราบ';
 
-    // หาไตรมาส/ปีงบประมาณจากวันที่ของข้อมูล ถ้าอ่านไม่ได้ใช้วันที่ปัจจุบัน
+    // 🌟 DYNAMIC: หาไตรมาสและปีงบประมาณจากข้อมูลจริง (SD / data.fiscalYear) ร่วมกับวันที่อัปเดต
     var now = new Date(), nm = now.getMonth();
     var q = quarterFromMonth(nm);
     var yr2 = (now.getFullYear() + 543 + (nm >= 9 ? 1 : 0)) % 100;
@@ -337,13 +339,31 @@ async function fetchData() {
       var mm = updated.match(/มกราคม|กุมภาพันธ์|มีนาคม|เมษายน|พฤษภาคม|มิถุนายน|กรกฎาคม|สิงหาคม|กันยายน|ตุลาคม|พฤศจิกายน|ธันวาคม/);
       if (mm) {
         var ym = updated.match(/25(\d{2})/);
-        var y2 = ym ? parseInt(ym[1]) : yr2;
+        var y2 = ym ? parseInt(ym[1], 10) : yr2;
         var mo = mm[0];
         if (['ตุลาคม','พฤศจิกายน','ธันวาคม'].indexOf(mo)>=0) { q=1; y2+=1; }
         else if (['มกราคม','กุมภาพันธ์','มีนาคม'].indexOf(mo)>=0) q=2;
         else if (['เมษายน','พฤษภาคม','มิถุนายน'].indexOf(mo)>=0) q=3;
         else q=4;
         yr2 = y2;
+      }
+      // ตรวจสอบปีงบประมาณจริงจากแหล่งงบใน SD หรือ data.fiscalYear
+      var sheetYr2 = 0;
+      if (data.fiscalYear) {
+        sheetYr2 = parseInt(String(data.fiscalYear).slice(-2), 10) || 0;
+      } else {
+        for (var si = 0; si < SD.length; si++) {
+          var sl = SD[si].label || '';
+          if (!isCarry(sl)) {
+            var sm = sl.match(/(\d{2})/);
+            if (sm) { sheetYr2 = parseInt(sm[1], 10); break; }
+          }
+        }
+      }
+      if (sheetYr2 > 0) {
+        // กรณีข้อมูลในชีตเป็นปีงบเก่าที่สรุปผลหลังสิ้นเดือน ก.ย. ให้ล็อกเป็น Q4 ของปีงบนั้น
+        if (yr2 > sheetYr2) q = 4;
+        yr2 = sheetYr2;
       }
     } catch(ex) {}
     CUR_Q = q;
