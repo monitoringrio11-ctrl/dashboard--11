@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+
+<html lang="th">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<title>Dashboard เร่งรัดเบิกจ่าย สชป.11 (Live)</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700;800&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--navy:#0D2B4E;--blue:#1565C0;--ice:#E3F2FD;--bg:#F0F6FB;--card:#fff;--red:#C62828;--orange:#E65100;--green:#1B5E20;--amber:#F57F17;--font:'Sarabun',Tahoma,sans-serif}
+body{font-family:var(--font);background:var(--bg);color:var(--navy);font-size:13px}
+.loading{position:fixed;inset:0;background:linear-gradient(135deg,#0D2B4E,#1565C0);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;color:#fff;gap:1rem}
+.loading h2{font-size:1.2rem;font-weight:800}.loading p{font-size:.82rem;opacity:.8}
+.spinner{width:48px;height:48px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.err{background:#FFEBEE;border:2px solid #C62828;border-radius:12px;padding:1.5rem;max-width:420px;text-align:center;color:#C62828}
+.err h3{font-size:1rem;margin-bottom:.5rem}.err p{font-size:.8rem;line-height:1.6;white-space:pre-line}
+.err button{margin-top:1rem;background:#C62828;color:#fff;border:none;border-radius:8px;padding:.5rem 1.2rem;font-family:inherit;font-size:.85rem;font-weight:700;cursor:pointer}
+.tb{background:linear-gradient(135deg,#0D2B4E,#1565C0);color:#fff;padding:.6rem 1rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.3rem;position:sticky;top:0;z-index:100}
+.tb h1{font-size:.9rem;font-weight:800}.tb p{font-size:.65rem;opacity:.8}
+.tbr{display:flex;gap:.3rem;flex-wrap:wrap;align-items:center}
+.bx{background:rgba(255,255,255,.15);border-radius:20px;padding:.18rem .55rem;font-size:.65rem;font-weight:700}
+.bx.r{background:#E53935}.bx.g{background:#1B5E20}
+.bp{background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:7px;padding:.28rem .7rem;font-family:inherit;font-size:.7rem;font-weight:700;cursor:pointer}
+.fb{background:var(--bg);border:1.5px solid rgba(21,101,192,.25);color:var(--navy);border-radius:20px;padding:.18rem .6rem;font-family:inherit;font-size:.7rem;font-weight:600;cursor:pointer;transition:all .15s}
+.fb.a,.fb:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
+select.fb{padding:.18rem .4rem}
+.fbar{background:#fff;padding:.45rem 1rem;display:flex;flex-wrap:wrap;gap:.3rem;align-items:center;border-bottom:1px solid rgba(21,101,192,.1);position:sticky;top:48px;z-index:99}
+.fl{font-size:.68rem;font-weight:700;color:var(--blue)}
+.act-wrap{position:relative;display:inline-block}
+.act-btn{background:var(--bg);border:1.5px solid rgba(21,101,192,.25);color:var(--navy);border-radius:20px;padding:.18rem .7rem;font-family:inherit;font-size:.7rem;font-weight:600;cursor:pointer;white-space:nowrap}
+.act-btn.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+.act-dd{display:none;position:absolute;top:110%;left:0;background:#fff;border:1.5px solid rgba(21,101,192,.2);border-radius:10px;box-shadow:0 4px 16px rgba(21,101,192,.15);z-index:200;min-width:280px;padding:.4rem 0;max-height:300px;overflow-y:auto}
+.act-dd.open{display:block}
+.act-item{display:flex;align-items:center;gap:.5rem;padding:.3rem .75rem;cursor:pointer;font-size:.75rem;color:var(--navy)}
+.act-item:hover{background:var(--ice)}
+.act-item input{cursor:pointer;accent-color:var(--blue)}
+.act-clear{display:block;text-align:center;padding:.3rem;font-size:.7rem;color:var(--blue);cursor:pointer;border-top:1px solid rgba(21,101,192,.1);margin-top:.2rem;font-weight:700}
+.act-clear:hover{background:var(--ice)}
+.kr{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.5rem;padding:.6rem 1rem}
+.kc{background:var(--card);border-radius:10px;padding:.7rem .85rem;box-shadow:0 2px 8px rgba(21,101,192,.08);border:1px solid rgba(21,101,192,.1);display:flex;align-items:center;gap:.5rem}
+.ki{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+.kl{font-size:.6rem;color:#2C5F8A;font-weight:600}.kv{font-size:.92rem;font-weight:800;line-height:1}
+.ks{font-size:.58rem;color:#666;margin-top:.08rem}
+.kp{font-size:.63rem;font-weight:700;padding:.05rem .32rem;border-radius:6px;margin-top:.1rem;display:inline-block}
+.cr{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:.5rem;padding:0 1rem .5rem}
+.cc{background:var(--card);border-radius:10px;padding:.75rem;box-shadow:0 2px 8px rgba(21,101,192,.08);border:1px solid rgba(21,101,192,.1)}
+.ct{font-size:.73rem;font-weight:800;color:var(--navy);margin-bottom:.5rem}
+.cw{position:relative;height:185px}
+.sec{padding:0 1rem 1rem}
+.st{font-size:.8rem;font-weight:800;color:var(--navy);margin-bottom:.45rem;border-left:4px solid var(--blue);padding-left:.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.3rem}
+.st-r{font-size:.7rem;font-weight:600;color:#2C5F8A}
+.tw{overflow-x:auto;border-radius:9px;box-shadow:0 2px 8px rgba(21,101,192,.08)}
+table{width:100%;border-collapse:collapse;background:var(--card);font-size:.7rem}
+thead tr{background:var(--navy);color:#fff}
+th{padding:.4rem .55rem;text-align:left;font-weight:700;white-space:nowrap;cursor:pointer;user-select:none}
+th:hover{background:#1a3a5c}
+th:nth-child(4),th:nth-child(5){text-align:right}th:nth-child(6){text-align:center}
+th.thq.cur{background:#1B5E20}
+td{padding:.3rem .55rem;border-bottom:1px solid rgba(21,101,192,.07);vertical-align:middle}
+tr:hover td{background:var(--ice)}
+.sr td{background:var(--navy);color:#fff;font-weight:800;font-size:.72rem}
+.ar td{background:#EEF5FF;font-weight:700;color:var(--blue);font-size:.68rem}
+.rz{background:#FFEBEE!important;border-left:3px solid var(--red)}
+.rc{background:#FFF3E0!important;border-left:3px solid var(--orange)}
+.rw{background:#FFFDE7!important;border-left:3px solid var(--amber)}
+.bd{display:inline-block;font-size:.6rem;font-weight:700;padding:.06rem .35rem;border-radius:6px;white-space:nowrap}
+.bz{background:#FFEBEE;color:var(--red)}.bc{background:#FFF3E0;color:var(--orange)}
+.bw{background:#FFFDE7;color:var(--amber)}
+.bw2{width:55px;height:5px;background:#eee;border-radius:3px;display:inline-block;vertical-align:middle;margin-right:2px}
+.bf{height:100%;border-radius:3px}
+.ac{background:var(--card);border-radius:10px;padding:.75rem .9rem;box-shadow:0 2px 8px rgba(21,101,192,.08);border:1px solid rgba(21,101,192,.1);margin-bottom:.5rem;display:none}
+.ac.s{display:block}
+.note{background:#FFF8E1;border:1px solid #FFE082;border-radius:8px;padding:.45rem .75rem;font-size:.7rem;color:#5D4037;margin:0 1rem .5rem}
+.src-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;vertical-align:middle}
+@media(max-width:560px){.kr{grid-template-columns:1fr 1fr}.cr{grid-template-columns:1fr}}
+@media print{.tb,.fbar{position:static}.bp,.loading{display:none}}
+</style>
+</head>
+<body>
+<div class="loading" id="loadingScreen">
+<div class="spinner"></div>
+<h2>💧 กำลังโหลดข้อมูล...</h2>
+<p id="loadingMsg">กำลังดึงข้อมูลจาก Cen-ProjectII</p>
+</div>
+<div id="mainContent" style="display:none">
+<div class="tb">
+<div><h1>⚡ Dashboard เร่งรัดเบิกจ่าย — สชป.11 (Live)</h1>
+<p id="tbSub">กรมชลประทาน · กำลังโหลด...</p></div>
+<div class="tbr">
+<span class="bx g" id="updBadge">🔄 กำลังโหลด</span>
+<span class="bx" id="tgtBadge">🎯 เป้าไตรมาสนี้</span>
+<span class="bx r" id="acBadge">⚡ 0 รายการ</span>
+<button class="bp" onclick="refreshData()">🔄 รีเฟรช</button>
+<button class="bp" onclick="window.print()">🖨 พิมพ์</button>
+<button class="bp" onclick="window.open(CHART_URL,'_blank')" style="background:#1B5E20;color:#fff;border-color:#1B5E20">📊 กราฟสถิติ สชป.11</button>
+</div>
+</div>
+<div class="fbar">
+<span class="fl">แหล่งงบ:</span>
+<button class="fb a" id="fs-all" onclick="fS('all',this)">ทั้งหมด</button>
+      <span id="srcFilterBtns"></span>
+<span class="fl" style="margin-left:.4rem">สถานะ:</span>
+<button class="fb a" id="ss-all" onclick="fT('all',this)">ทั้งหมด</button>
+<button class="fb" onclick="fT('zero',this)" title="ยังไม่มีการเบิกจ่าย">⛔ 0%</button>
+<button class="fb" onclick="fT('crit',this)" title="ต่ำกว่า 40% ของเป้าไตรมาสนี้">🔴 วิกฤต</button>
+<button class="fb" onclick="fT('warn',this)" title="ต่ำกว่า 75% ของเป้าไตรมาสนี้">🟠 เสี่ยงสูง</button>
+<button class="fb" onclick="fT('urg',this)" title="ต่ำกว่าเป้าไตรมาสนี้">🟡 ต่ำกว่าเป้า</button>
+<button class="fb" onclick="fT('cancel',this)">❌ ยกเลิก</button>
+<span class="fl" style="margin-left:.4rem">วงเงิน:</span>
+<button class="fb a" id="am-all" onclick="fAmt('all',this)">ทั้งหมด</button>
+<button class="fb" id="am-10" onclick="fAmt('10',this)">&gt;10 ลบ.</button>
+<button class="fb" id="am-50" onclick="fAmt('50',this)">&gt;50 ลบ.</button>
+<button class="fb" id="am-100" onclick="fAmt('100',this)">&gt;100 ลบ.</button>
+<span class="fl" style="margin-left:.4rem">กิจกรรม:</span>
+<div class="act-wrap" id="actWrap">
+<button class="act-btn" id="actBtn" onclick="toggleAct(event)">📋 ทุกกิจกรรม ▾</button>
+<div class="act-dd" id="actDd">
+<div id="actList"></div>
+<span class="act-clear" onclick="clearActs()">✕ ล้างตัวกรอง</span>
+</div>
+</div>
+<span class="fl" style="margin-left:.4rem">หน่วยงาน:</span>
+<select class="fb" id="agSel" onchange="fA(this.value)"><option value="all">ทุกหน่วยงาน</option></select>
+</div>
+<div class="note" id="filterNote">แสดงรายการทั้งหมด</div>
+<!-- TARGET BOX -->
+<div id="targetBox" style="margin:.4rem 1rem .2rem;background:#fff;border-radius:12px;border:1px solid rgba(21,101,192,.15);box-shadow:0 2px 8px rgba(21,101,192,.06);overflow:hidden">
+<div onclick="toggleTarget()" style="background:linear-gradient(135deg,#0D2B4E,#1565C0);color:#fff;padding:.5rem 1rem;display:flex;align-items:center;justify-content:space-between;cursor:pointer">
+<span style="font-size:.78rem;font-weight:800">🎯 แนวทางเป้าหมายการเบิกจ่ายงบลงทุน — แยกตามแหล่งงบประมาณ</span>
+<span id="targetArrow" style="font-size:.8rem;transition:transform .2s">▼</span>
+</div>
+<div id="targetContent" style="display:block;padding:.75rem 1rem">
+<div style="overflow-x:auto">
+<table style="width:100%;border-collapse:collapse;font-size:.72rem">
+<thead>
+<tr style="background:#0D2B4E;color:#fff">
+<th style="padding:.4rem .65rem;text-align:left;font-weight:700">แหล่งงบประมาณ</th>
+<th class="thq" id="thQ1" style="padding:.4rem .65rem;text-align:center;font-weight:700">Q1<span class="qs"></span><br/><span style="font-weight:400;font-size:.62rem">ต.ค.–ธ.ค.</span></th>
+<th class="thq" id="thQ2" style="padding:.4rem .65rem;text-align:center;font-weight:700">Q2<span class="qs"></span><br/><span style="font-weight:400;font-size:.62rem">ม.ค.–มี.ค.</span></th>
+<th class="thq" id="thQ3" style="padding:.4rem .65rem;text-align:center;font-weight:700">Q3<span class="qs"></span><br/><span style="font-weight:400;font-size:.62rem">เม.ย.–มิ.ย.</span></th>
+<th class="thq" id="thQ4" style="padding:.4rem .65rem;text-align:center;font-weight:700">Q4<span class="qs"></span><br/><span style="font-weight:400;font-size:.62rem">ก.ค.–ก.ย.</span></th>
+<th style="padding:.4rem .65rem;text-align:left;font-weight:700">หมายเหตุ</th>
+</tr>
+</thead>
+<tbody id="targetTableBody"></tbody>
+</table>
+</div>
+<div style="margin-top:.5rem;font-size:.65rem;color:#7B9BB8;display:flex;gap:1.2rem;flex-wrap:wrap;padding:.3rem 0">
+<span id="curQNote">★ ปัจจุบันอยู่ในไตรมาสนี้</span>
+<span id="noteRed">🔴 เส้นประแดง = เป้า พ.ร.บ.</span>
+<span id="noteOrange">🟠 เส้นประส้ม = เป้า กันเหลื่อม</span>
+</div>
+</div>
+</div>
+<!-- END TARGET BOX -->
+<div class="kr" id="kr"></div>
+<div class="cr">
+<div class="cc"><div class="ct">🥧 ภาพรวมเบิกจ่ายรวม (ลบ.)</div><div class="cw"><canvas id="dc"></canvas></div></div>
+<div class="cc"><div class="ct">📊 ร้อยละเบิกจ่าย vs เป้าหมาย</div><div class="cw"><canvas id="bc"></canvas></div></div>
+<div class="cc"><div class="ct">📈 จัดสรร vs เบิกจ่าย (ลบ.)</div><div class="cw"><canvas id="hc"></canvas></div></div>
+</div>
+<div class="sec">
+<div class="ac" id="agc"></div>
+<div class="st">
+<span>📋 รายการงาน — เรียงตามแหล่งงบ → หน่วยงาน → ร้อยละ (น้อย→มาก)</span>
+<span class="st-r" id="rowCount">0 รายการ</span>
+</div>
+<div class="tw"><table>
+<thead><tr>
+<th>#</th><th>หน่วยงาน / ชื่องาน / กิจกรรม</th><th>แหล่งงบ</th>
+<th onclick="sortBy(3)">จัดสรร (ลบ.) ↕</th>
+<th onclick="sortBy(4)">เบิกจ่าย (ลบ.) ↕</th>
+<th onclick="sortBy(5)">ร้อยละ ↕</th>
+</tr></thead>
+<tbody id="tb"></tbody>
+</table></div>
+</div>
+</div>
+<script>
+// ============================================================
+// 🔧 ใส่ URL ของ Google Apps Script ที่นี่ (รวมศูนย์จุดเดียว)
+// ============================================================
+const API_URL = 'https://script.google.com/macros/s/AKfycbyMaCtK01tGDYP-jrq9cgUU8x071ye09-NN2YqwmQrAKIl2H_5JaoOZ1zI3s-yuo6vK/exec';
+const CHART_URL = API_URL + '?page=chart';
+// (URL เดิม: https://script.google.com/macros/s/AKfycbxIkBB5T0vL7MES76pqcB_a2bgqT-TVDFIRMDgCnHKRHuZBytPuXPbfVogzP2qgF1Vf/exec)
+// ============================================================
+
+// ============================================================
+// 🎯 CONFIG เป้าหมาย — แก้ที่นี่ "จุดเดียว" เมื่อขึ้นปีงบประมาณใหม่
+// ------------------------------------------------------------
+// เป้าหมายสะสม (%) ณ สิ้นไตรมาส แยกตามประเภทแหล่งงบ
+//   prb   = งบ พ.ร.บ. และแหล่งงบอื่นที่ไม่ใช่กันเหลื่อม
+//   carry = งบกันเหลื่อมปี (ชื่อแหล่งงบมีคำว่า "กัน" หรือ "เหลื่อม")
+// ทุกส่วนของหน้า (ตารางเป้าหมาย, ป้ายสถานะ, สีแถว, KPI, เส้นเป้าในกราฟ)
+// อ่านค่าจากตรงนี้ และเลือกไตรมาสปัจจุบันให้อัตโนมัติจากวันที่ข้อมูล
+// ============================================================
+const QUARTER_TARGETS = {
+  prb:   {q1:30, q2:45, q3:60, q4:75},
+  carry: {q1:50, q2:70, q3:90, q4:100}
+};
+// เกณฑ์สถานะ คิดเป็นสัดส่วนของ "เป้าไตรมาสปัจจุบัน"
+const CRIT_RATIO = 0.4;    // ต่ำกว่า 40% ของเป้า = 🔴 วิกฤต
+const WARN_RATIO = 0.75;   // ต่ำกว่า 75% ของเป้า = 🟠 เสี่ยงสูง
+// ============================================================
+
+let SD=[], AD=[], ACTS=[], ALL=[];
+let fSrc='all', fStat='all', fAg='all', fAmtV='all';
+let selActs=new Set(), sortCol=-1, sortDir=1;
+let charts={};
+
+// ---------- ไตรมาสปีงบประมาณ (ต.ค.–ธ.ค.=Q1, ม.ค.–มี.ค.=Q2, เม.ย.–มิ.ย.=Q3, ก.ค.–ก.ย.=Q4) ----------
+function quarterFromMonth(m0){ return m0>=9?1:m0<=2?2:m0<=5?3:4; }   // m0 = 0..11
+let CUR_Q = quarterFromMonth(new Date().getMonth());
+const Q_MONTHS = {1:'ต.ค.–ธ.ค.',2:'ม.ค.–มี.ค.',3:'เม.ย.–มิ.ย.',4:'ก.ค.–ก.ย.'};
+
+function isCarry(label){ return label.indexOf('กัน')>=0 || label.indexOf('เหลื่อม')>=0; }
+function qTarget(kind,q){ return QUARTER_TARGETS[kind]['q'+(q||CUR_Q)]; }
+// เป้าหมายของแหล่งงบ ณ ไตรมาสปัจจุบัน
+function getSrcTarget(label){ return qTarget(label&&isCarry(label)?'carry':'prb'); }
+function critTh(t){ return Math.round(t*CRIT_RATIO); }
+function warnTh(t){ return Math.round(t*WARN_RATIO); }
+
+// สีแหล่งงบ Dynamic จาก SD
+const FALLBACK_COLORS=['#1565C0','#1B5E20','#E65100','#6A1B9A','#42A5F5','#00695C','#C62828','#F57F17','#37474F','#AD1457'];
+function getSrcColor(label) {
+  if (label.indexOf('พ.ร.บ.') >= 0 && label.indexOf('กัน') < 0 && label.indexOf('เพิ่มเติม') < 0) return '#1565C0';
+  if (label.indexOf('กลาง') >= 0 && label.indexOf('กัน') < 0) return '#0D47A1';
+  if (label.indexOf('กลาง') >= 0 && label.indexOf('กัน') >= 0) return '#1B5E20';
+  if (label.indexOf('พ.ร.บ.') >= 0 && label.indexOf('กัน') >= 0) return '#E65100';
+  if (label.indexOf('เพิ่มเติม') >= 0) return '#42A5F5';
+  if (label.indexOf('หมุนเวียน') >= 0) return '#6A1B9A';
+  return '#999999';
+}
+const srcColors = {};
+
+// ===== ส่วนที่แสดงไตรมาส/เป้าปัจจุบัน (หัวตาราง ★, ป้ายบนหัวเว็บ, คำอธิบายเส้นกราฟ) =====
+function applyQuarterUI(){
+  for (let i=1;i<=4;i++){
+    const th=document.getElementById('thQ'+i); if(!th) continue;
+    th.classList.toggle('cur', i===CUR_Q);
+    const s=th.querySelector('.qs'); if(s) s.textContent = (i===CUR_Q)?' ★':'';
+  }
+  const tp=qTarget('prb'), tc=qTarget('carry');
+  document.getElementById('tgtBadge').textContent='🎯 เป้า Q'+CUR_Q+': พ.ร.บ.='+tp+'% | กันเหลื่อม='+tc+'%';
+  document.getElementById('curQNote').textContent='★ ปัจจุบันอยู่ในไตรมาส '+CUR_Q+' ('+Q_MONTHS[CUR_Q]+')';
+  document.getElementById('noteRed').textContent='🔴 เส้นประแดง = เป้า พ.ร.บ. ('+tp+'%)';
+  document.getElementById('noteOrange').textContent='🟠 เส้นประส้ม = เป้า กันเหลื่อม ('+tc+'%)';
+}
+
+// ===== สร้างปุ่มกรองแหล่งงบอัตโนมัติจาก SD =====
+function buildSrcFilterBtns(SD) {
+  var container = document.getElementById('srcFilterBtns');
+  if (!container || !SD) return;
+  while (container.firstChild) container.removeChild(container.firstChild);
+  SD.forEach(function(s) {
+    var shortLabel = s.label
+      .replace('งบ พ.ร.บ.', 'พ.ร.บ.')
+      .replace('งบกลาง', 'กลาง')
+      .replace('งบ พ.ร.บ. ', 'พ.ร.บ. ')
+      .replace('เงินทุนหมุนเวียน', 'หมุนเวียน');
+    var btn = document.createElement('button');
+    btn.className = 'fb';
+    btn.textContent = shortLabel;
+    (function(label) {
+      btn.onclick = function() { fS(label, btn); };
+    })(s.label);
+    container.appendChild(btn);
+  });
+}
+
+// ===== สร้างตารางเป้าหมายอัตโนมัติจาก SD + QUARTER_TARGETS =====
+function buildTargetTable(SD) {
+  var tbody = document.getElementById('targetTableBody');
+  if (!tbody || !SD) return;
+  function getNote(label) {
+    if (isCarry(label)) return 'เบิกให้ครบ ห้ามมีเงินพับ';
+    if (label.indexOf('หมุนเวียน') >= 0) return 'ใช้เป้าเดียวกับงบ พ.ร.บ.';
+    if (label.indexOf('เพิ่มเติม') >= 0) return 'โอนเปลี่ยนแปลง';
+    return '🔴 เส้นประแดงในกราฟ';
+  }
+  function cell(v, q) {
+    var cur = (q === CUR_Q);
+    return '<td style="padding:.35rem .65rem;text-align:center;' +
+      (cur ? 'font-weight:700;background:#E8F5E9;color:#1B5E20' : '') + '">' + v + '%</td>';
+  }
+  var html = '';
+  SD.forEach(function(s) {
+    var t = QUARTER_TARGETS[isCarry(s.label) ? 'carry' : 'prb'];
+    var c = s.color || getSrcColor(s.label);
+    html += '<tr>' +
+      '<td style="padding:.35rem .65rem;font-weight:700;color:'+c+'">' +
+      '<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:'+c+';margin-right:5px;vertical-align:middle"></span>' +
+      s.label + '</td>' +
+      cell(t.q1,1) + cell(t.q2,2) + cell(t.q3,3) + cell(t.q4,4) +
+      '<td style="padding:.35rem .65rem;font-size:.62rem;color:#2C5F8A">'+getNote(s.label)+'</td>' +
+      '</tr>';
+  });
+  tbody.innerHTML = html;
+}
+
+const fm=n=>n==null?'0.00':n.toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+// ป้ายสถานะ เทียบกับเป้า "ไตรมาสปัจจุบัน" ของแหล่งงบนั้น
+function bdg(p,label){
+  var tgt=getSrcTarget(label), ct=critTh(tgt), wt=warnTh(tgt);
+  if(p===0)return'<span class="bd bz">⛔ 0%</span>';
+  if(p<ct)return'<span class="bd bc">🔴 &lt;'+ct+'%</span>';
+  if(p<wt)return'<span class="bd bw">🟠 &lt;'+wt+'%</span>';
+  if(p<tgt)return'<span class="bd bw" style="color:#F57F17">🟡 &lt;'+tgt+'%</span>';
+  return'<span class="bd" style="color:#1B5E20;background:#E8F5E9">✅ &ge;'+tgt+'%</span>';
+}
+// สีแถว: ถึงเป้าแล้วไม่ไฮไลต์
+const rc=(p,t)=>p===0?'rz':p<critTh(t)?'rc':p<t?'rw':'';
+
+async function fetchData() {
+  document.getElementById('loadingScreen').style.display='flex';
+  document.getElementById('mainContent').style.display='none';
+  document.getElementById('loadingMsg').textContent='กำลังดึงข้อมูลจาก Cen-ProjectII...';
+  if (!API_URL || API_URL.trim() === '' || API_URL === 'YOUR_APPS_SCRIPT_URL_HERE') {
+    showError('ยังไม่ได้ตั้งค่า API URL','กรุณาแก้ไข API_URL ในโค้ด JavaScript\nให้เป็น URL ของ Google Apps Script v3 ที่ Deploy แล้ว');
+    return;
+  }
+  try {
+    const res = await fetch(API_URL, {method:'GET', redirect:'follow'});
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    SD=data.SD||[]; AD=data.AD||[]; ACTS=data.ACTS||[]; ALL=data.ALL||[];
+    const updated = data.updated || 'ไม่ทราบ';
+
+    // 🌟 DYNAMIC: หาไตรมาสและปีงบประมาณจากข้อมูลจริง (SD / data.fiscalYear) ร่วมกับวันที่อัปเดต
+    var now = new Date(), nm = now.getMonth();
+    var q = quarterFromMonth(nm);
+    var yr2 = (now.getFullYear() + 543 + (nm >= 9 ? 1 : 0)) % 100;
+    try {
+      var mm = updated.match(/มกราคม|กุมภาพันธ์|มีนาคม|เมษายน|พฤษภาคม|มิถุนายน|กรกฎาคม|สิงหาคม|กันยายน|ตุลาคม|พฤศจิกายน|ธันวาคม/);
+      if (mm) {
+        var ym = updated.match(/25(\d{2})/);
+        var y2 = ym ? parseInt(ym[1], 10) : yr2;
+        var mo = mm[0];
+        if (['ตุลาคม','พฤศจิกายน','ธันวาคม'].indexOf(mo)>=0) { q=1; y2+=1; }
+        else if (['มกราคม','กุมภาพันธ์','มีนาคม'].indexOf(mo)>=0) q=2;
+        else if (['เมษายน','พฤษภาคม','มิถุนายน'].indexOf(mo)>=0) q=3;
+        else q=4;
+        yr2 = y2;
+      }
+      // ตรวจสอบปีงบประมาณจริงจากแหล่งงบใน SD หรือ data.fiscalYear
+      var sheetYr2 = 0;
+      if (data.fiscalYear) {
+        sheetYr2 = parseInt(String(data.fiscalYear).slice(-2), 10) || 0;
+      } else {
+        for (var si = 0; si < SD.length; si++) {
+          var sl = SD[si].label || '';
+          if (!isCarry(sl)) {
+            var sm = sl.match(/(\d{2})/);
+            if (sm) { sheetYr2 = parseInt(sm[1], 10); break; }
+          }
+        }
+      }
+      if (sheetYr2 > 0) {
+        // กรณีข้อมูลในชีตเป็นปีงบเก่าที่สรุปผลหลังสิ้นเดือน ก.ย. ให้ล็อกเป็น Q4 ของปีงบนั้น
+        if (yr2 > sheetYr2) q = 4;
+        yr2 = sheetYr2;
+      }
+    } catch(ex) {}
+    CUR_Q = q;
+    var fiscalYearFull = 'ไตรมาส '+q+'/25'+yr2;
+
+    document.getElementById('tbSub').textContent=`กรมชลประทาน · ${fiscalYearFull} · ข้อมูล ณ ${updated} · ทั้งหมด ${data.total+data.cancelled} รายการ | ใช้งาน ${data.total} | ยกเลิก ${data.cancelled}`;
+    document.getElementById('updBadge').textContent=`✅ ${updated}`;
+    // populate srcColors ก่อน renderTable เพื่อให้สีถูกต้อง
+    SD.forEach(function(s,i){ srcColors[s.label] = s.color || getSrcColor(s.label) || FALLBACK_COLORS[i % FALLBACK_COLORS.length]; });
+    applyQuarterUI();
+    initSel(); initActList(); renderKPI(); renderTable(); initCharts(); buildSrcFilterBtns(SD); buildTargetTable(SD);
+    document.getElementById('loadingScreen').style.display='none';
+    document.getElementById('mainContent').style.display='block';
+  } catch(err) {
+    showError('โหลดข้อมูลไม่สำเร็จ','ข้อผิดพลาด: '+err.message+'\n\nตรวจสอบ:\n1. API_URL ถูกต้องหรือไม่\n2. Deploy เป็น "Anyone" หรือยัง\n3. ต่อ internet อยู่หรือไม่');
+  }
+}
+
+function showError(title, msg) {
+  document.getElementById('loadingScreen').innerHTML=`<div class="err"><h3>❌ ${title}</h3><p>${msg}</p><button onclick="location.reload()">🔄 ลองใหม่</button></div>`;
+}
+
+// พับ/ขยายกล่องเป้าหมาย (ประกาศไว้ระดับบนสุด เพื่อให้ onclick ใน HTML เรียกใช้ได้)
+function toggleTarget(){
+  const c=document.getElementById('targetContent');
+  const a=document.getElementById('targetArrow');
+  if(c.style.display==='none'){
+    c.style.display='block';
+    a.style.transform='rotate(0deg)';
+  } else {
+    c.style.display='none';
+    a.style.transform='rotate(-90deg)';
+  }
+}
+
+function resetBtnGroup(prefix){
+  document.querySelectorAll('[id^="'+prefix+'"]').forEach(x=>x.classList.remove('a'));
+  const all=document.getElementById(prefix+'all'); if(all) all.classList.add('a');
+}
+
+function refreshData() {
+  Object.values(charts).forEach(c=>c&&c.destroy()); charts={};
+  selActs.clear(); fSrc='all'; fStat='all'; fAg='all'; fAmtV='all';
+  resetBtnGroup('fs-'); resetBtnGroup('ss-'); resetBtnGroup('am-');
+  updateActBtn();
+  fetchData();
+}
+
+function initSel() {
+  const s=document.getElementById('agSel');
+  s.innerHTML='<option value="all">ทุกหน่วยงาน</option>';
+  AD.forEach(a=>{const o=document.createElement('option');o.value=a.short;o.textContent=a.short+' ('+a.cnt+')';s.appendChild(o);});
+}
+
+function initActList() {
+  document.getElementById('actList').innerHTML=ACTS.map(a=>
+    `<label class="act-item"><input type="checkbox" value="${a}" onchange="onActChg(this)"> ${a}</label>`
+  ).join('');
+}
+
+function toggleAct(e){e.stopPropagation();document.getElementById('actDd').classList.toggle('open');}
+document.addEventListener('click',()=>document.getElementById('actDd').classList.remove('open'));
+function onActChg(cb){if(cb.checked)selActs.add(cb.value);else selActs.delete(cb.value);updateActBtn();renderTable();}
+function clearActs(){selActs.clear();document.querySelectorAll('#actList input').forEach(cb=>cb.checked=false);updateActBtn();renderTable();}
+function updateActBtn(){const btn=document.getElementById('actBtn');if(selActs.size===0){btn.textContent='📋 ทุกกิจกรรม ▾';btn.className='act-btn';}else{btn.textContent=`📋 ${selActs.size} กิจกรรม ▾`;btn.className='act-btn on';}}
+
+function getFiltered(){
+  // ALL format: [agency, src, name, alloc, paid, pct, activity, status]
+  let rows=[...ALL];
+  // กรองรายการยกเลิกออกเป็น default (แสดงเฉพาะตอนกดปุ่มยกเลิก)
+  if(fStat!=='cancel') rows=rows.filter(d=>d[7]!=='ยกเลิก');
+  if(fSrc!=='all') rows=rows.filter(d=>d[1]===fSrc);
+  if(fAg!=='all') rows=rows.filter(d=>d[0]===fAg);
+  // สถานะเทียบกับเป้าไตรมาสปัจจุบันของแหล่งงบของแต่ละรายการ
+  if(fStat==='zero') rows=rows.filter(d=>d[5]===0);
+  else if(fStat==='crit') rows=rows.filter(d=>d[5]<critTh(getSrcTarget(d[1])));
+  else if(fStat==='warn') rows=rows.filter(d=>d[5]<warnTh(getSrcTarget(d[1])));
+  else if(fStat==='urg') rows=rows.filter(d=>d[5]<getSrcTarget(d[1]));
+  else if(fStat==='cancel') rows=rows.filter(d=>d[7]==='ยกเลิก');
+  if(fAmtV==='10') rows=rows.filter(d=>d[3]>=10);
+  else if(fAmtV==='50') rows=rows.filter(d=>d[3]>=50);
+  else if(fAmtV==='100') rows=rows.filter(d=>d[3]>=100);
+  if(selActs.size>0) rows=rows.filter(d=>selActs.has(d[6]));
+  if(sortCol>=0) rows.sort((a,b)=>(a[sortCol]-b[sortCol])*sortDir);
+  return rows;
+}
+
+function renderKPI(){
+  const ta=SD.reduce((s,v)=>s+v.alloc,0),tp=SD.reduce((s,v)=>s+v.paid,0);
+  document.getElementById('kr').innerHTML=[
+    ...SD.map(s=>({i:'💰',bg:s.color+'22',l:s.label,v:fm(s.alloc)+' ลบ.',s:'เบิก '+fm(s.paid)+' ลบ.',p:s.pct,t:getSrcTarget(s.label),c:s.color})),
+    {i:'📊',bg:'#F3E5F522',l:'ภาพรวม',v:fm(ta)+' ลบ.',s:'เบิก '+fm(tp)+' ลบ.',p:Math.round(tp/ta*1000)/10||0,t:qTarget('prb'),c:'#6A1B9A'}
+  ].map(c=>{
+    const col=c.p>=c.t?'#1B5E20':c.p<critTh(c.t)?'#C62828':'#E65100';
+    return`<div class="kc"><div class="ki" style="background:${c.bg}">${c.i}</div><div><div class="kl">${c.l}</div><div class="kv">${c.v}</div><div class="ks">${c.s}</div><span class="kp" style="background:${col}20;color:${col}">${c.p}% / เป้า Q${CUR_Q} ${c.t}%</span></div></div>`;
+  }).join('');
+}
+
+function renderTable(){
+  const rows=getFiltered();
+  document.getElementById('acBadge').textContent=`⚡ ${rows.length} รายการ`;
+  document.getElementById('rowCount').textContent=`${rows.length.toLocaleString()} รายการ`;
+  const notes=[];
+  if(fSrc!=='all')notes.push(fSrc);
+  if(fStat!=='all')notes.push({zero:'0%',crit:'วิกฤต (<'+Math.round(CRIT_RATIO*100)+'% ของเป้า)',warn:'เสี่ยงสูง (<'+Math.round(WARN_RATIO*100)+'% ของเป้า)',urg:'ต่ำกว่าเป้า Q'+CUR_Q,cancel:'ยกเลิก'}[fStat]);
+  if(fAmtV!=='all')notes.push({10:'>10 ลบ.',50:'>50 ลบ.',100:'>100 ลบ.'}[fAmtV]);
+  if(selActs.size>0)notes.push([...selActs].join(', '));
+  if(fAg!=='all')notes.push(fAg);
+  document.getElementById('filterNote').textContent=notes.length>0
+    ?`🔍 กรอง: ${notes.join(' | ')} — แสดง ${rows.length} รายการ`
+    :`แสดงรายการทั้งหมด เทียบเป้าไตรมาส ${CUR_Q} (พ.ร.บ. ${qTarget('prb')}% | กันเหลื่อม ${qTarget('carry')}%) | ${rows.length} รายการ`;
+  let h='',n=0,ls='',la='';
+  rows.forEach(d=>{
+    const p=d[5],tgt=getSrcTarget(d[1]),r=rc(p,tgt);
+    if(d[1]!==ls){const col=srcColors[d[1]]||'#999';h+=`<tr class="sr"><td colspan="6"><span class="src-dot" style="background:${col}"></span>${d[1]}</td></tr>`;ls=d[1];la='';}
+    if(d[0]!==la){h+=`<tr class="ar"><td colspan="6">🏢 ${d[0]}</td></tr>`;la=d[0];}
+    const bc=p===0?'#C62828':p<critTh(tgt)?'#E65100':p<tgt?'#F57F17':'#1B5E20';n++;
+    h+=`<tr class="${r}"><td style="color:#999;font-size:.65rem">${n}</td>
+      <td style="max-width:240px;white-space:normal;line-height:1.3;font-size:.68rem">${d[2]}<br><span style="font-size:.6rem;color:#7B9BB8;font-style:italic">${d[6]}</span></td>
+      <td style="font-size:.62rem;color:#2C5F8A;white-space:nowrap"><span class="src-dot" style="background:${srcColors[d[1]]||'#999'}"></span>${d[1]}</td>
+      <td style="text-align:right;font-weight:700">${fm(d[3])}</td>
+      <td style="text-align:right;font-weight:700">${fm(d[4])}</td>
+      <td style="text-align:center;white-space:nowrap">
+        <div style="display:flex;align-items:center;justify-content:center;gap:2px">
+          <div class="bw2"><div class="bf" style="width:${Math.min(p,100)}%;background:${bc}"></div></div>
+          <span style="font-weight:700;color:${bc};font-size:.7rem">${p}%</span>
+        </div>${bdg(p,d[1])}</td></tr>`;
+  });
+  if(!h)h='<tr><td colspan="6" style="text-align:center;padding:1.5rem;color:#999">ไม่พบข้อมูล</td></tr>';
+  document.getElementById('tb').innerHTML=h;
+}
+
+function renderAg(){
+  const c=document.getElementById('agc');
+  if(fAg==='all'){c.className='ac';return;}
+  const ag=AD.find(a=>a.short===fAg);
+  if(!ag){c.className='ac';return;}
+  const tg=qTarget('prb');
+  const col=ag.pct<critTh(tg)?'#C62828':ag.pct<tg?'#E65100':'#1B5E20';
+  c.className='ac s';
+  c.innerHTML=`<b style="font-size:.85rem">🏢 ${ag.name} (${ag.short})</b>
+    <div style="display:flex;gap:.8rem;flex-wrap:wrap;font-size:.72rem;color:#2C5F8A;margin-top:.3rem">
+      <span>จัดสรร: <b style="color:var(--navy)">${fm(ag.alloc)} ลบ.</b></span>
+      <span>เบิกจ่าย: <b style="color:var(--navy)">${fm(ag.paid)} ลบ.</b></span>
+      <span>คงเหลือ: <b style="color:var(--navy)">${fm(ag.alloc-ag.paid)} ลบ.</b></span>
+      <span>ร้อยละ: <b style="color:${col}">${ag.pct}%</b></span>
+      <span>จำนวน: <b style="color:var(--navy)">${ag.cnt} รายการ</b></span>
+    </div>`;
+}
+
+function fS(v,b){fSrc=v;document.querySelectorAll('[id^="fs-"]').forEach(x=>x.classList.remove('a'));document.querySelectorAll('#srcFilterBtns .fb').forEach(x=>x.classList.remove('a'));b.classList.add('a');renderTable();}
+function fT(v,b){fStat=v;document.querySelectorAll('[id^="ss-"]').forEach(x=>x.classList.remove('a'));b.classList.add('a');renderTable();}
+function fAmt(v,b){fAmtV=v;document.querySelectorAll('[id^="am-"]').forEach(x=>x.classList.remove('a'));b.classList.add('a');renderTable();}
+function fA(v){fAg=v;renderAg();renderTable();}
+function sortBy(col){if(sortCol===col)sortDir*=-1;else{sortCol=col;sortDir=1;}renderTable();}
+
+function initCharts(){
+  const f="'Sarabun',Tahoma,sans-serif",ta=SD.reduce((s,v)=>s+v.alloc,0),tp=SD.reduce((s,v)=>s+v.paid,0);
+  const tPrb=qTarget('prb'), tCarry=qTarget('carry');
+  if(charts.dc)charts.dc.destroy();
+  charts.dc=new Chart(document.getElementById('dc'),{type:'doughnut',data:{labels:['เบิกจ่ายแล้ว','คงเหลือ'],datasets:[{data:[tp,ta-tp],backgroundColor:['#1565C0','#E3F2FD'],borderColor:['#0D47A1','#90CAF9'],borderWidth:2,hoverOffset:5}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom',labels:{font:{family:f,size:10},boxWidth:10,padding:5}},tooltip:{callbacks:{label:c=>`${c.label}: ${fm(c.parsed)} ลบ.`}}}},
+    plugins:[{id:'ct',afterDraw(ch){const{ctx,chartArea:{left,top,right,bottom}}=ch,cx=(left+right)/2,cy=(top+bottom)/2;ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#0D2B4E';ctx.font=`bold 14px ${f}`;ctx.fillText(`${Math.round(tp/ta*1000)/10}%`,cx,cy-6);ctx.font=`9px ${f}`;ctx.fillStyle='#2C5F8A';ctx.fillText('ภาพรวม',cx,cy+8);ctx.restore();}}]});
+  if(charts.bc)charts.bc.destroy();
+  charts.bc=new Chart(document.getElementById('bc'),{type:'bar',data:{labels:SD.map(s=>s.label),datasets:[{label:'เบิกจ่าย (%)',data:SD.map(s=>s.pct),backgroundColor:SD.map(s=>s.color+'cc'),borderColor:SD.map(s=>s.color),borderWidth:1.5,borderRadius:4},{label:'เป้า Q'+CUR_Q+' พ.ร.บ. ('+tPrb+'%)',data:SD.map(s=>isCarry(s.label)?null:tPrb),type:'line',borderColor:'#E53935',borderWidth:2,borderDash:[6,3],pointBackgroundColor:'#E53935',pointRadius:4,tension:0,backgroundColor:'transparent',spanGaps:false},{label:'เป้า Q'+CUR_Q+' กันเหลื่อม ('+tCarry+'%)',data:SD.map(s=>isCarry(s.label)?tCarry:null),type:'line',borderColor:'#F57F17',borderWidth:2,borderDash:[3,3],pointBackgroundColor:'#F57F17',pointRadius:4,tension:0,backgroundColor:'transparent',spanGaps:false}],},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:f,size:9},boxWidth:9,padding:4}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.parsed.y}%`}}},scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%',font:{family:f,size:8}},grid:{color:'rgba(0,0,0,0.05)'}},x:{ticks:{font:{family:f,size:8}},grid:{display:false}}}}});
+  if(charts.hc)charts.hc.destroy();
+  charts.hc=new Chart(document.getElementById('hc'),{type:'bar',data:{labels:SD.map(s=>s.label),datasets:[{label:'จัดสรร (ลบ.)',data:SD.map(s=>s.alloc),backgroundColor:SD.map(s=>s.color+'33'),borderColor:SD.map(s=>s.color),borderWidth:1.5,borderRadius:3},{label:'เบิกจ่าย (ลบ.)',data:SD.map(s=>s.paid),backgroundColor:SD.map(s=>s.color+'cc'),borderRadius:3}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:f,size:9},boxWidth:9,padding:4}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fm(c.parsed.x)} ลบ.`}}},scales:{x:{ticks:{callback:v=>v.toLocaleString(),font:{family:f,size:8}},grid:{color:'rgba(0,0,0,0.05)'}},y:{ticks:{font:{family:f,size:8}},grid:{display:false}}}}});
+}
+
+fetchData();
+</script>
+</body>
+</html>
